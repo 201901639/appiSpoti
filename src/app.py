@@ -1,7 +1,7 @@
 from dash import Dash, html, dcc, Input, Output, State, ctx
 import dash_bootstrap_components as dbc
-from src.etl import cargar_datos
-from src.graphics import graficar_barras, graficar_pie
+from etl import cargar_datos
+from graphics import graficar_barras, graficar_pie
 import os
 
 # Define el estilo de fuente de Spotify
