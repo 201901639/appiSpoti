@@ -13,7 +13,16 @@ spotify_font = {
     "text-align": "center",
     "padding": "15px 30px",  # Espaciado interno
     "margin": "0 auto",  # Centrado horizontal
-    "display": "block"  # Centrado en la columna
+    "display": "block",  # Centrado en la columna
+    "color": "#000",  # Texto en negro
+    "font-weight": "bold"  # Texto en negrita
+}
+
+style_text = {
+    'color': 'green',  # Color del texto en verde
+    'background-color': 'transparent',  # Sin fondo
+    'font-family': 'Gotham, sans-serif',  # Fuente Gotham
+    'font-size': '22px',  # Tamaño de la fuente (ajústalo a lo que prefieras)
 }
 
 colores_generos = {
@@ -61,6 +70,68 @@ pagina_inicio = dbc.Container(
         )
     ],
     fluid=True
+)
+
+# Formulario para recomendaciones
+formulario_recomendaciones = dbc.Container(
+    [
+        dbc.Row(
+            dbc.Col(
+                html.H4("Selecciona tus preferencias:", className="text-center my-4")
+            )
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    dcc.Dropdown(
+                        id="dropdown-estacion",
+                        options=[
+                            {"label": "Verano", "value": "Verano"},
+                            {"label": "Otoño", "value": "Otoño"},
+                            {"label": "Invierno", "value": "Invierno"},
+                            {"label": "Primavera", "value": "Primavera"}
+                        ],
+                        placeholder="¿En qué estación te encuentras?",
+                        className="mb-4"
+                    ),
+                    width=6
+                ),
+                dbc.Col(
+                    dcc.Dropdown(
+                        id="dropdown-genero",
+                        options=[
+                            {"label": genero, "value": genero}
+                            for genero in datos["Género General"].unique()
+                        ],
+                        placeholder="¿Qué género te apetece escuchar hoy?",
+                        className="mb-4"
+                    ),
+                    width=6
+                )
+            ]
+        ),
+        dbc.Row(
+            dbc.Col(
+                dbc.Button(
+                    "Mostrar recomendaciones",
+                    id="boton-recomendaciones",
+                    color="primary",
+                    size="lg",
+                    className="my-3",
+                    style=spotify_font
+                )
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                html.Div(
+                    id="output-recomendaciones",
+                    className="text-center my-4",
+                    style={"color": "#fff", "font-size": "18px"}
+                )
+            )
+        )
+    ]
 )
 
 # Layout de la página de análisis
@@ -115,6 +186,7 @@ pagina_analisis = dbc.Container(
                 )
             )
         ),
+        formulario_recomendaciones,
         html.Div(id="scroll-target", style={"padding-top": "50px"})  # Marcador para el scroll
     ],
     fluid=True
@@ -165,13 +237,37 @@ def mostrar_conclusion(n_clicks):
 
     conclusion = html.Div(
         [
-            html.P(f"En verano tu género más escuchado es {genero_verano}", style=spotify_font),
-            html.P(f"En otoño tu género más escuchado es {genero_otoño}", style=spotify_font),
-            html.P(f"En invierno tu género más escuchado es {genero_invierno}", style=spotify_font),
-            html.P(f"En primavera tu género más escuchado es {genero_primavera}", style=spotify_font)
+            html.P(f"En verano tu género más escuchado es {genero_verano}", style=style_text),
+            html.P(f"En otoño tu género más escuchado es {genero_otoño}", style=style_text),
+            html.P(f"En invierno tu género más escuchado es {genero_invierno}", style=style_text),
+            html.P(f"En primavera tu género más escuchado es {genero_primavera}", style=style_text)
         ]
     )
     return conclusion, {"opacity": "1"}, "#scroll-target"  # Realiza scroll hasta el marcador
+@app.callback(
+    Output("output-recomendaciones", "children"),
+    [
+        Input("boton-recomendaciones", "n_clicks"),
+        State("dropdown-estacion", "value"),
+        State("dropdown-genero", "value")
+    ]
+)
+def generar_recomendaciones(n_clicks, estacion, genero):
+    if not n_clicks or not estacion or not genero:
+        return "Selecciona ambos campos para ver las recomendaciones."
+    
+    # Filtrar el dataset por estación y género
+    recomendaciones = datos[
+        (datos["Estación"] == estacion) & (datos["Género General"] == genero)
+    ]
+    
+    if recomendaciones.empty:
+        return f"No hay canciones disponibles para {genero} en {estacion}."
+    
+    # Seleccionar las primeras 5 canciones
+    canciones = recomendaciones["Nombres"].head(5).tolist()
+    
+    return html.Ul([html.Li(cancion, style={"color": "green"}) for cancion in canciones])
 
 if __name__ == "__main__":
     app.run_server(debug=True)
