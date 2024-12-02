@@ -1,7 +1,7 @@
 from dash import Dash, html, dcc, Input, Output, State, ctx
 import dash_bootstrap_components as dbc
-from etl import cargar_datos
-from graphics import graficar_barras, graficar_pie
+from src.etl import cargar_datos
+from src.graphics import graficar_barras, graficar_pie
 import os
 
 # Define el estilo de fuente de Spotify
@@ -40,6 +40,7 @@ colores_generos = {
 }
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
 ruta_csv = os.path.join(os.path.dirname(__file__), 'datos_limpios.csv')
 datos = cargar_datos(ruta_csv)
